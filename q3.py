@@ -262,8 +262,7 @@ def round_fractional_matching(n, m, edges):
         components, parents = BFS_forest(n)
 
         for component in components:
-            node = component[0]
-            node, Dis, _ = BFS(edges[0][0], n)
+            node, Dis, _ = BFS(component[0], n)
             node_2, LongDis, parent = BFS(node, n)
 
             temp_path = find_longest_path(node, node_2, parent)
