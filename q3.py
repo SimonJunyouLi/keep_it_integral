@@ -101,14 +101,12 @@ def BFS(u, n):
 
 def BFS_forest(n):
     visited = [False for i in range(n)]
-    parents = []
     components = []  # List to store the components in the forest
 
     for u in range(n):
-        if not visited[u]:
+        if not visited[u] and u in graph:
             # Start a BFS from unvisited nodes to explore a component
             component = []
-            parent = [-1 for i in range(n)]
             queue = deque()
             queue.append(u)
             visited[u] = True
@@ -117,17 +115,18 @@ def BFS_forest(n):
                 front = queue.popleft()
                 component.append(front)
 
+                # print("graph", graph)
                 for i in graph[front]:
                     cur = i[0]
                     if not visited[cur]:
                         visited[cur] = True
-                        parent[cur] = front
                         queue.append(cur)
 
             components.append(component)
-            parents.append(parent)
+            # print("component", component)
+            # print("components", components)
 
-    return components, parents
+    return components
 
 def find_longest_path(u, v, parent):
     path = []
@@ -259,11 +258,11 @@ def round_fractional_matching(n, m, edges):
         
         longest_path = []
         # node, Dis, _ = BFS(edges[0][0], n)
-        components, parents = BFS_forest(n)
+        components = BFS_forest(n)
 
         for component in components:
-            node, Dis, _ = BFS(component[0], n)
-            node_2, LongDis, parent = BFS(node, n)
+            node, _, _ = BFS(component[0], n)
+            node_2, _, parent = BFS(node, n)
 
             temp_path = find_longest_path(node, node_2, parent)
 
