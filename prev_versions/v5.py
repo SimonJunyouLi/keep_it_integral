@@ -2,7 +2,9 @@ from collections import deque
 
 # variables to be used
 # in both functions
-graph = {}
+n, m = map(int, input().split())
+edges = []
+graph = [[0 for _ in range(n)] for _ in range(n)]
 cycles = []
 
 def integral(num):
@@ -10,46 +12,44 @@ def integral(num):
 
 # Function to mark the vertex with
 # different colors for different cycles
-def dfs_cycle(u, p, color: list, par: list):
+def dfs_cycle(u, p, color: list, par: list): 
+    print("cycles", cycles)
 	# already (completely) visited vertex.
-	if color[u] == 2:
-		return
-     
+    if color[u] == 2:
+        return
+ 
 	# seen vertex, but was not 
 	# completely visited -> cycle detected.
 	# backtrack based on parents to
 	# find the complete cycle.
-	if color[u] == 1:
-		v = []
-		cur = p
-		
-		for i in graph[cur]:
-			if i[0] == u:
-				v.append(i)
+    if color[u] == 1:
+        v = []
+        cur = p
+        v.append((u, cur, graph[u][cur]))
 
 		# backtrack the vertex which are
 		# in the current cycle thats found
-		while cur != u:
-			for i in graph[par[cur]]:
-				if i[0] == cur:
-					v.append(i)
-			cur = par[cur]
-		cycles.append(v)
-		return
+        while cur != u:
+            cur = par[cur]
+            v.append((par[cur], cur, graph[cur][par[cur]]))
+        cycles.append(v)
+        return
 
-	par[u] = p
+    par[u] = p
 
 	# partially visited.
-	color[u] = 1
+    color[u] = 1
 
 	# simple dfs on graph
-	for v in graph[u]:
+    for v in range(len(graph[u])):
 		# if it has not been visited previously
-		if v[0] == par[u]: continue
-		dfs_cycle(v[0], u, color, par)
+        if v == par[u]: continue
+        if not integral(graph[u][v]): 
+            print(u, v)
+            dfs_cycle(v, u, color, par)
 
 	# completely visited.
-	color[u] = 2
+    color[u] = 2
      
 def BFS(u, n):
         # marking all nodes as unvisited
@@ -74,9 +74,9 @@ def BFS(u, n):
 
             # print(graph)
  
-            for i in graph[front]:
-                cur = i[0]
-                if not visited[cur]:
+            for v in range(len(graph[front])):
+                cur = v
+                if not visited[cur] and graph[front][cur] != 0:
                     # mark the ith node as visited
                     visited[cur] = True
                     # make distance of i , one more than distance of front
@@ -101,7 +101,7 @@ def BFS_forest(n):
     components = []  # List to store the components in the forest
 
     for u in range(n):
-        if not visited[u] and u in graph:
+        if not visited[u] and not set(graph[u]) == {0}:
             # Start a BFS from unvisited nodes to explore a component
             component = []
             queue = deque()
@@ -112,9 +112,9 @@ def BFS_forest(n):
                 front = queue.popleft()
                 component.append(front)
 
-                for i in graph[front]:
-                    cur = i[0]
-                    if not visited[cur]:
+                for i in range(len(graph[front])):
+                    cur = i
+                    if not visited[cur] and graph[front][cur] != 0:
                         visited[cur] = True
                         queue.append(cur)
 
@@ -131,12 +131,11 @@ def find_longest_path(u, v, parent):
     path.append(u)
 
     for i in range(len(path)-1):
-        for e in graph[path[i]]:
-            if e[0] == path[i+1]:
-                pEdges.append(e)
+        for e in range(len(graph[path[i]])):
+            if e == path[i+1]:
+                pEdges.append((path[i], e, graph[path[i]][e]))
 
     return pEdges
-
 
 def round_fractional_matching(n, m, edges):
     if not edges:
@@ -159,20 +158,20 @@ def round_fractional_matching(n, m, edges):
     dfs_cycle(edges[0][0], 0, color, par)
     
     while cycles:
-        # print("in cycles")
         cycle = cycles[0]
 
         c0, c1, c2 = [], [], []
         cnt = 0
-        epsilon = cycle[0][1][2]
+        epsilon = cycle[0][2]
 
-        for _, (u, v, x) in cycle:
+        for u, v, x in cycle:
             if 1 - x < epsilon:
                 epsilon = 1-x
             elif x < epsilon:
                 epsilon = x
         
-        for _, (u, v, x) in cycle:
+        for u, v, x in cycle:
+            if u > v: u, v = v, u
             c0.append((u,v,x))
             if cnt % 2 == 0:
                 c1.append((u, v, x-epsilon))
@@ -199,14 +198,12 @@ def round_fractional_matching(n, m, edges):
             c2 = [e for e in c2 if e not in cnt2]
             edges.extend(c2)
 
-        graph.clear()
+        for i, j in zip(range(n), range(n)):
+            graph[i][j] = 0
+
         for u, v, x in edges:
-            if u not in graph:
-                graph[u] = []
-            if v not in graph:
-                graph[v] = []
-            graph[u].append((v, (u, v, x)))
-            graph[v].append((u, (u, v, x)))
+            graph[u][v] = x
+            graph[v][u] = x
 
         cycles.clear()
         if edges:
@@ -217,17 +214,14 @@ def round_fractional_matching(n, m, edges):
     ########## H (edges) is acyclic ###########
 
     while edges:
-        # print("in edges")
-        # print("edges", edges)
-        graph.clear()
+        print("in edges")
+        print("edges", edges)
+        for i, j in zip(range(n), range(n)):
+            graph[i][j] = 0
         for u, v, x in edges:
-            if u not in graph:
-                graph[u] = []
-            if v not in graph:
-                graph[v] = []
-            graph[u].append((v, (u, v, x)))
-            graph[v].append((u, (u, v, x)))
-        
+            graph[u][v] = x
+            graph[v][u] = x
+
         longest_path = []
         components = BFS_forest(n)
 
@@ -242,15 +236,16 @@ def round_fractional_matching(n, m, edges):
         
         c0, c1, c2 = [], [], []
         cnt = 0
-        epsilon = longest_path[0][1][2]
+        epsilon = longest_path[0][2]
 
-        for _, (u, v, x) in longest_path:
+        for u, v, x in longest_path:
             if 1 - x < epsilon:
                 epsilon = 1-x
             elif x < epsilon:
                 epsilon = x
         
-        for _, (u, v, x) in longest_path:
+        for u, v, x in longest_path:
+            if u > v: u, v = v, u
             c0.append((u,v,x))
             if cnt % 2 == 0:
                 c1.append((u, v, x-epsilon))
@@ -267,11 +262,16 @@ def round_fractional_matching(n, m, edges):
 
         # remove edges in the longest path
         edges = [edge for edge in edges if edge not in c0]
+        print("longest", longest_path)
+        print("edge after removal", edges)
+        print("cnt1", cnt1)
         if len(cnt1) >= len(cnt2):
             for u, v, x in cnt1:
                 if abs(x-1) < 1e-5: integral_matching.append((u,v))
             c1 = [e for e in c1 if e not in cnt1] # remove integral values from edges
+            print("c1 after removal", c1)
             edges.extend(c1) # add updated non-integral values back to edges
+            print("edges after addition", edges)
         else:
             for u, v, x in cnt2:
                 if abs(x-1) < 1e-5: integral_matching.append((u,v))
@@ -280,19 +280,14 @@ def round_fractional_matching(n, m, edges):
 
     return integral_matching
 
-n, m = map(int, input().split())
-edges = []
+
 for _ in range(m):
     u, v, x = map(float, input().split())
     edges.append((int(u), int(v), x))
 
 for u, v, x in edges:
-    if u not in graph:
-        graph[u] = []
-    if v not in graph:
-        graph[v] = []
-    graph[u].append((v, (u, v, x)))
-    graph[v].append((u, (u, v, x)))
+    graph[u][v] = x
+    graph[v][u] = x
 
 integral_matching = round_fractional_matching(n, m, edges)
 
