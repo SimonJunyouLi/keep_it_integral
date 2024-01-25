@@ -1,8 +1,8 @@
 # Keep It Integral
-This is a solution for fractional rounding for the standard Linear Programming relaxation of maximum matching. 
+This is a solution for fractional rounding of the standard Linear Programming relaxation of maximum matching. 
 
 ## Problem Statement
-The input of the probelm woulud be an optimal fractional solution to the following Linear Program,
+The input of the probelm is an optimal fractional solution to the following Linear Program,
 
 ```math 
 \begin{align*}
